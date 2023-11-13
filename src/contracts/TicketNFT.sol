@@ -37,13 +37,16 @@ abstract contract TicketNFT is ITicketNFT {
 
     function mint(address holder, string memory holderName) external override returns (uint256 id) {
         ticketIDCounter++;
-        //Initialise and store ticket metadata
+
+        //Initialise and stores ticket metadata
         tickets[ticketIDCounter] = Ticket({
             holder: holder,
             holderName: holderName,
             expiryTime: block.timestamp + 10 days,
             isUsed: false
         });
+        
+        emit Transfer(address(0), holder, ticketIDCounter);
         return ticketIDCounter;
     }
 
