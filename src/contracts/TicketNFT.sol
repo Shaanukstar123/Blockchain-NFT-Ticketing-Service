@@ -13,28 +13,37 @@ contract TicketNFT is ITicketNFT {
         bool used;
     }
 
-    uint256 ticketID;
-    address primaryMarketAddress; // implement after primary market is defined
+    uint256 private ticketID;
+    address internal primaryMarketAddress;
+    string private nameOfEvent;
+    uint256 private ticketPrice;
+    uint256 private maxTickets;
+    address private eventCreator;
 
     mapping (uint256 => Ticket) private tickets;
     mapping(uint256 => address) private ticketApprovals;
     
-    // Constructor
-    constructor() {
-        ticketID = 0;
+
+
+    constructor(string memory _eventName, address _eventCreator, uint256 _ticketPrice, uint256 _maxTickets, address _primaryMarketAddress) {
+        nameOfEvent = _eventName;
+        ticketPrice = _ticketPrice;
+        maxTickets = _maxTickets;
+        eventCreator = _eventCreator;
+        primaryMarketAddress = _primaryMarketAddress;
     }
 
     // Implementations of ITicketNFT functions
     function creator() external view override returns (address) {
-        return address(0); // implement after primary market is defined
+        return eventCreator;
     }
 
     function maxNumberOfTickets() external view override returns (uint256) {
-        return 100; // implement after primary market is defined
+        return maxTickets;
     }
 
     function eventName() external view override returns (string memory) {
-        return tickets[ticketID].eventName;
+        return nameOfEvent;
     }
 
     function mint(address _holder, string memory _holderName) external override returns (uint256 id) {
