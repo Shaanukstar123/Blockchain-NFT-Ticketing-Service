@@ -3,7 +3,7 @@ pragma solidity ^0.8.10;
 
 import "../interfaces/ITicketNFT.sol";
 
-abstract contract TicketNFT is ITicketNFT {
+contract TicketNFT is ITicketNFT {
 
     struct Ticket {
         string eventName;
@@ -37,12 +37,12 @@ abstract contract TicketNFT is ITicketNFT {
         return tickets[ticketID].eventName;
     }
 
-    function mint(string memory _eventName, address _holder, string memory _holderName) external returns (uint256 id) {
+    function mint(address _holder, string memory _holderName) external override returns (uint256 id) {
         ticketID++;
         require(msg.sender == primaryMarketAddress, "TicketNFT: caller is not the primary market"); // Replace with actual primary market address
 
         tickets[ticketID] = Ticket({
-            eventName: _eventName,
+            eventName: tickets[ticketID].eventName,
             holder: _holder,
             holderName: _holderName,
             expiryTime: block.timestamp + 10 days,
@@ -99,7 +99,7 @@ abstract contract TicketNFT is ITicketNFT {
         return tickets[_ticketID].holderName;
     }
 
-    function updateHoldername(uint256 _ticketID, string calldata newName) external {
+    function updateHolderName(uint256 _ticketID, string calldata newName) external override {
         require(tickets[_ticketID].holder == msg.sender, "TicketNFT: caller is not the ticket owner");
         require(tickets[_ticketID].holder != address(0), "TicketNFT: ticket does not exist");
         tickets[_ticketID].holderName = newName;
