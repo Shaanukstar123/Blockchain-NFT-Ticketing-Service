@@ -5,6 +5,7 @@ import {ITicketNFT} from "../interfaces/ITicketNFT.sol";
 import {TicketNFT} from "./TicketNFT.sol";
 import {IERC20} from "../interfaces/IERC20.sol";
 import {IPrimaryMarket} from "../interfaces/IPrimaryMarket.sol";
+import {PurchaseToken} from "./PurchaseToken.sol";
 
 contract PrimaryMarket is IPrimaryMarket {
     IERC20 public paymentToken;
@@ -18,8 +19,8 @@ contract PrimaryMarket is IPrimaryMarket {
 
     mapping(address => EventDetails) public eventDetails;
 
-    constructor(address _paymentTokenAddress) {
-        paymentToken = IERC20(_paymentTokenAddress);
+    constructor(PurchaseToken _purchaseTokenAddress) {
+        paymentToken = IERC20(address(_purchaseTokenAddress));
     }
 
     function createNewEvent(string memory eventName, uint256 price, uint256 maxNumberOfTickets) external override returns (ITicketNFT ticketCollection) {

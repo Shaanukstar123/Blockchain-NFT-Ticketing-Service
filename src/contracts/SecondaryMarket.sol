@@ -26,8 +26,8 @@ contract SecondaryMarket is ISecondaryMarket {
     // Mapping from ticket collection address and ticket ID to bid amounts
     mapping(address => mapping(uint256 => uint256)) public bids;
 
-    constructor(address _purchaseTokenAddress) {
-        purchaseToken = IERC20(_purchaseTokenAddress);
+    constructor(PurchaseToken _purchaseTokenAddress) {
+        purchaseToken = IERC20(address(_purchaseTokenAddress));
     }
 
     function listTicket(address ticketCollection, uint256 ticketID, uint256 price) external override {
