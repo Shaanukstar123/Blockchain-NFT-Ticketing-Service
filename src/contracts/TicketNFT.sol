@@ -22,8 +22,6 @@ contract TicketNFT is ITicketNFT {
 
     mapping (uint256 => Ticket) private tickets;
     mapping(uint256 => address) private ticketApprovals;
-    
-
 
     constructor(string memory _eventName, address _eventCreator, uint256 _ticketPrice, uint256 _maxTickets, address _primaryMarketAddress) {
         nameOfEvent = _eventName;

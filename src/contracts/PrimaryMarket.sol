@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.10;
 
 import {ITicketNFT} from "../interfaces/ITicketNFT.sol";
 import {TicketNFT} from "./TicketNFT.sol";
 import {IERC20} from "../interfaces/IERC20.sol";
 import {IPrimaryMarket} from "../interfaces/IPrimaryMarket.sol";
-import {PurchaseToken} from "./PurchaseToken.sol";
 
 contract PrimaryMarket is IPrimaryMarket {
     IERC20 public paymentToken;
