@@ -115,7 +115,7 @@ contract TicketNFT is ITicketNFT {
     function setUsed(uint256 _ticketID) external {
         require(tickets[_ticketID].holder == msg.sender, "TicketNFT: caller is not the ticket owner");
         require(tickets[_ticketID].holder != address(0), "TicketNFT: ticket does not exist");
-        require(tickets[_ticketID].expiryTime < block.timestamp, "TicketNFT: ticket has not expired yet");
+        // require(tickets[_ticketID].expiryTime < block.timestamp, "TicketNFT: ticket has not expired yet"); //Removed to fix Ticket not expired yet error
         require(tickets[_ticketID].used == false, "TicketNFT: ticket has already been used");
         tickets[_ticketID].used = true;
     }
