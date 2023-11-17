@@ -17,6 +17,7 @@ contract SecondaryMarket is ISecondaryMarket {
         uint256 price;
         uint256 highestBid;
         address highestBidder;
+        string highestBidderName;
         bool isActive;
     }
 
@@ -39,8 +40,9 @@ contract SecondaryMarket is ISecondaryMarket {
         listings[ticketCollection][ticketID] = TicketListing({
             lister: msg.sender,
             price: price,
-            highestBid: 0,
+            highestBid: price,
             highestBidder: address(0),
+            highestBidderName: "",
             isActive: true
         });
 
@@ -63,6 +65,7 @@ contract SecondaryMarket is ISecondaryMarket {
         // Update listing with new highest bid
         listing.highestBid = bidAmount;
         listing.highestBidder = msg.sender;
+        listing.highestBidderName = name;
 
         emit BidSubmitted(msg.sender, ticketCollection, ticketID, bidAmount, name);
     }
@@ -85,7 +88,8 @@ contract SecondaryMarket is ISecondaryMarket {
         require(purchaseToken.balanceOf(address(this)) >= listing.highestBid, "Accept Bid: Insufficient balance");
         ITicketNFT ticketNFT = ITicketNFT(ticketCollection);
         address eventCreator = ticketNFT.creator();
-        ticketNFT.updateHolderName(ticketID, ""); // Placeholder for actual name update
+        string memory newHolderName = listing.highestBidderName;
+        ticketNFT.updateHolderName(ticketID, newHolderName);
         ticketNFT.transferFrom(address(this), listing.highestBidder, ticketID);
 
         uint256 fee = listing.highestBid * FEE_PERCENTAGE / 100;
