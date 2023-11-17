@@ -19,8 +19,8 @@ contract PrimaryMarket is IPrimaryMarket {
 
     mapping(address => EventDetails) public eventDetails;
 
-    constructor(PurchaseToken _purchaseTokenAddress) {
-        paymentToken = IERC20(address(_purchaseTokenAddress));
+    constructor(PurchaseToken _purchaseToken) {
+        paymentToken = IERC20(address(_purchaseToken));
     }
 
     function createNewEvent(string memory eventName, uint256 price, uint256 maxNumberOfTickets) external override returns (ITicketNFT ticketCollection) {

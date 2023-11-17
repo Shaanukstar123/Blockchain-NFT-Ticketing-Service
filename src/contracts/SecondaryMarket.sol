@@ -26,8 +26,8 @@ contract SecondaryMarket is ISecondaryMarket {
     // Mapping from ticket collection address and ticket ID to bid amounts
     mapping(address => mapping(uint256 => uint256)) public bids;
 
-    constructor(PurchaseToken _purchaseTokenAddress) {
-        purchaseToken = IERC20(address(_purchaseTokenAddress));
+    constructor(PurchaseToken _purchaseToken) {
+        purchaseToken = IERC20(address(_purchaseToken));
     }
 
     function listTicket(address ticketCollection, uint256 ticketID, uint256 price) external override {
@@ -50,20 +50,24 @@ contract SecondaryMarket is ISecondaryMarket {
     function submitBid(address ticketCollection, uint256 ticketID, uint256 bidAmount, string memory name) external override {
         TicketListing storage listing = listings[ticketCollection][ticketID];
         require(listing.isActive, "Ticket is not listed");
-        require(bidAmount > listing.highestBid, "Bid amount is not higher than highest bid");
-        require(purchaseToken.allowance(msg.sender, address(this)) >= bidAmount, "ERC20: insufficient allowance for bid");
+        require(bidAmount > listing.highestBid, "Bid not higher than current highest");
+        require(purchaseToken.allowance(msg.sender, address(this)) >= bidAmount, "Insufficient allowance");
 
-        if (listing.highestBidder != address(0)) {
-            // Refund the previous highest bid
+        // Refund the previous highest bid if it exists
+        if (listing.highestBidder != address(0) && listing.highestBid > 0) {
             purchaseToken.transfer(listing.highestBidder, listing.highestBid);
         }
 
+        // Escrow the new bid
         purchaseToken.transferFrom(msg.sender, address(this), bidAmount);
+
+        // Update listing with new highest bid
         listing.highestBid = bidAmount;
         listing.highestBidder = msg.sender;
 
         emit BidSubmitted(msg.sender, ticketCollection, ticketID, bidAmount, name);
     }
+
 
     function getHighestBid(address ticketCollection, uint256 ticketId) external view override returns (uint256) {
         return listings[ticketCollection][ticketId].highestBid;
@@ -75,22 +79,28 @@ contract SecondaryMarket is ISecondaryMarket {
 
     function acceptBid(address ticketCollection, uint256 ticketID) external override {
         TicketListing storage listing = listings[ticketCollection][ticketID];
-        require(listing.isActive, "Ticket is not listed");
-        require(listing.lister == msg.sender, "Caller is not the ticket lister");
-        require(listing.highestBidder != address(0), "No bids for ticket");
-        require(purchaseToken.allowance(listing.highestBidder, address(this)) >= listing.highestBid, "ERC20: insufficient allowance for bid acceptance");
+        require(listing.isActive, "Ticket not listed");
+        require(listing.lister == msg.sender, "Not ticket lister");
+        require(listing.highestBidder != address(0), "No bids available");
+        require(purchaseToken.allowance(listing.highestBidder, address(this)) >= listing.highestBid, "Insufficient allowance");
 
         ITicketNFT ticketNFT = ITicketNFT(ticketCollection);
-        address eventCreator = ticketNFT.creator(); // Fetch the event creator's address from the TicketNFT contract
+        address eventCreator = ticketNFT.creator();
 
-        ticketNFT.updateHolderName(ticketID, ""); // Placeholder for actual name update logic
-        ticketNFT.setUsed(ticketID);
+        // Transfer ticket to highest bidder
+        ticketNFT.updateHolderName(ticketID, ""); // Placeholder for actual name update
         ticketNFT.transferFrom(address(this), listing.highestBidder, ticketID);
 
+        // Fee calculation
         uint256 fee = listing.highestBid * FEE_PERCENTAGE / 100;
-        purchaseToken.transferFrom(listing.highestBidder, listing.lister, listing.highestBid - fee);
-        purchaseToken.transferFrom(listing.highestBidder, eventCreator, fee); // Transfer the fee to the event creator
 
+        // Transfer bid amount minus fee to lister
+        require(purchaseToken.transfer(listing.lister, listing.highestBid - fee), "Transfer to lister failed");
+
+        // Transfer fee to event creator
+        require(purchaseToken.transfer(eventCreator, fee), "Fee transfer failed");
+
+        // Reset listing
         listing.isActive = false;
         listing.highestBid = 0;
         listing.highestBidder = address(0);
@@ -99,14 +109,15 @@ contract SecondaryMarket is ISecondaryMarket {
     }
 
 
+
     function delistTicket(address ticketCollection, uint256 ticketID) external override {
         TicketListing storage listing = listings[ticketCollection][ticketID];
-        require(listing.isActive, "Ticket is not listed");
+        require(listing.isActive, "Ticket not listed");
         require(listing.lister == msg.sender, "Not the ticket lister");
 
-        if (listing.highestBidder != address(0)) {
+        if (listing.highestBidder != address(0) && listing.highestBid > 0) {
             // Refund the highest bid if there is one
-            purchaseToken.transfer(listing.highestBidder, listing.highestBid);
+            require(purchaseToken.transfer(listing.highestBidder, listing.highestBid), "Refund failed");
         }
 
         ITicketNFT ticketNFT = ITicketNFT(ticketCollection);

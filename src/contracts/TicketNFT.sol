@@ -49,7 +49,7 @@ contract TicketNFT is ITicketNFT {
         require(msg.sender == primaryMarketAddress, "TicketNFT: caller is not the primary market"); // Replace with actual primary market address
 
         tickets[ticketID] = Ticket({
-            eventName: tickets[ticketID].eventName,
+            eventName: nameOfEvent,
             holder: _holder,
             holderName: _holderName,
             expiryTime: block.timestamp + 10 days,
