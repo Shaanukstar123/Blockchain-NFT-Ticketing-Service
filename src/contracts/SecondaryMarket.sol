@@ -51,20 +51,21 @@ contract SecondaryMarket is ISecondaryMarket {
         TicketListing storage listing = listings[ticketCollection][ticketID];
         require(listing.isActive, "Ticket is not listed");
         require(bidAmount > listing.highestBid, "Bid not higher than current highest");
-        require(purchaseToken.allowance(msg.sender, address(this)) >= bidAmount, "Submit bid: Insufficient allowance");
 
+        // Refund the previous highest bid if it exists
         if (listing.highestBidder != address(0) && listing.highestBid > 0) {
-            // Refund the previous highest bid
             require(purchaseToken.transfer(listing.highestBidder, listing.highestBid), "Refund failed");
         }
 
-        purchaseToken.transferFrom(msg.sender, address(this), bidAmount);
+        // Transfer new bid to this contract
+        require(purchaseToken.transferFrom(msg.sender, address(this), bidAmount), "Transfer failed");
+
+        // Update listing with new highest bid
         listing.highestBid = bidAmount;
         listing.highestBidder = msg.sender;
 
         emit BidSubmitted(msg.sender, ticketCollection, ticketID, bidAmount, name);
     }
-
 
 
     function getHighestBid(address ticketCollection, uint256 ticketId) external view override returns (uint256) {
@@ -80,8 +81,8 @@ contract SecondaryMarket is ISecondaryMarket {
         require(listing.isActive, "Ticket not listed");
         require(listing.lister == msg.sender, "Not ticket lister");
         require(listing.highestBidder != address(0), "No bids available");
-        require(purchaseToken.allowance(listing.highestBidder, address(this)) >= listing.highestBid, "Accept Bid: Insufficient allowance");
-
+        //check balance directly because secondary market has the tokes.
+        require(purchaseToken.balanceOf(address(this)) >= listing.highestBid, "Accept Bid: Insufficient balance");
         ITicketNFT ticketNFT = ITicketNFT(ticketCollection);
         address eventCreator = ticketNFT.creator();
         ticketNFT.updateHolderName(ticketID, ""); // Placeholder for actual name update
@@ -104,8 +105,6 @@ contract SecondaryMarket is ISecondaryMarket {
 
         emit BidAccepted(listing.highestBidder, ticketCollection, ticketID, listing.highestBid, "");
     }
-
-
 
     function delistTicket(address ticketCollection, uint256 ticketID) external override {
         TicketListing storage listing = listings[ticketCollection][ticketID];
