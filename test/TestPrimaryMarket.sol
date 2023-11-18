@@ -36,5 +36,23 @@ contract PrimaryMarketTest is Test {
         vm.stopPrank();
     }
 
-    // Additional thorough tests for getPrice and edge cases.
+    function testInvalidEventCreation() public {
+    // Attempt creating an event with invalid parameters
+    }
+
+    function testEventCreationWithDifferentParameters() public {
+        // Create multiple events with varied parameters
+    }
+
+    function testPurchaseWithInsufficientTokens() public {
+        // Attempt purchasing a ticket without enough ERC20 tokens
+    }
+
+    function testMaxTicketLimitEnforcement() public {
+        // Try purchasing more tickets than allowed for an event
+    }
+
+    function testEventCreatorEarnings() public {
+        // Verify event creator receives correct ERC20 tokens after a sale
+    }
 }

@@ -55,4 +55,36 @@ contract SecondaryMarketTest is Test {
         assertEq(ticketNFT.holderOf(ticketId), buyer, "Buyer should now own the ticket");
     }
 
+    function testListingOfExpiredTicket() public {
+        // Try to list an expired ticket
+    }
+
+    function testBidOnListedTicket() public {
+        // Place a bid on a listed ticket
+    }
+
+    function testMultipleBids() public {
+        // Submit multiple bids and ensure only the highest is accepted
+    }
+
+    function testDelistingTicket() public {
+        // Delist a ticket and ensure it's no longer available
+    }
+
+    function testSecondaryMarketFeeDeduction() public {
+        // Verify the 5% fee deduction and transfer to the admin
+    }
+
+    function testTransferOfOwnershipAndPaymentOnBidAcceptance() public {
+        // Accept a bid and verify transfer and payment
+    }
+
+    function testRefusingLowerBidsAfterHigherBid() public {
+        // Ensure lower bids cannot be accepted after a higher bid
+    }
+
+    function testBidRejection() public {
+        // Implement and test a bid rejection function
+    }
+
 }

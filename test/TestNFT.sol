@@ -42,5 +42,54 @@ contract TicketNFTTest is Test {
         bool expired = ticketNFT.isExpiredOrUsed(ticketId);
         assertEq(expired, false, "Newly minted ticket should not be expired");
     }
+
+    function testInvalidMinting() public {
+        for (uint i = 0; i < testMaxTickets; i++) {
+            ticketNFT.mint(testHolder, "Holder");
+        }
+
+        vm.expectRevert(); // Expect a revert on the next call
+        ticketNFT.mint(testHolder, "Holder");
+    }
+
+    function testTicketHolderNameUpdate() public {
+        uint256 ticketId = ticketNFT.mint(testHolder, "Initial Holder");
+        vm.prank(testHolder); // Simulating action by the ticket holder
+        ticketNFT.updateHolderName(ticketId, "Updated Holder");
+
+        assertEq(ticketNFT.holderNameOf(ticketId), "Updated Holder", "Holder's name should be updated");
+    }
+
+    function testTicketExpiryAfter10Days() public {
+        uint256 ticketId = ticketNFT.mint(testHolder, "Holder");
+        vm.warp(block.timestamp + 10 days + 1); // Simulate time passage
+
+        assertEq(ticketNFT.isExpiredOrUsed(ticketId), true, "Ticket should be expired after 10 days");
+    }
+
+    function testUsedTicketFlag() public {
+        uint256 ticketId = ticketNFT.mint(testHolder, "Holder");
+        vm.prank(address(this)); // Assuming this contract is the admin
+        ticketNFT.setUsed(ticketId);
+
+        vm.prank(testHolder);
+        vm.expectRevert(); // Expect a revert on the next call
+        ticketNFT.transferFrom(testHolder, address(0x789), ticketId);
+    }
+
+    function testAdminOnlyAccess() public {
+        uint256 ticketId = ticketNFT.mint(testHolder, "Holder");
+        vm.prank(testHolder);
+        vm.expectRevert(); // Expect a revert on the next call
+        ticketNFT.setUsed(ticketId); // This should fail as only admin can set this
+    }
+
+    function testTicketMetadataRetrieval() public {
+        uint256 ticketId = ticketNFT.mint(testHolder, "Holder");
+        assertEq(ticketNFT.eventName(), testEventName, "Event name should match");
+        assertEq(ticketNFT.holderOf(ticketId), testHolder, "Holder should match");
+        assertEq(ticketNFT.holderNameOf(ticketId), "Holder", "Holder's name should match");
+        assertEq(ticketNFT.isExpiredOrUsed(ticketId), false, "Ticket should be valid initially");
+    }
 }
 
