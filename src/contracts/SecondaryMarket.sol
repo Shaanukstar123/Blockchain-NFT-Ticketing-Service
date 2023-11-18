@@ -33,7 +33,7 @@ contract SecondaryMarket is ISecondaryMarket {
 
     function listTicket(address ticketCollection, uint256 ticketID, uint256 price) external override {
         ITicketNFT ticketNFT = ITicketNFT(ticketCollection);
-        require(ticketNFT.holderOf(ticketID) == msg.sender, "Not the ticket owner");
+        require(ticketNFT.holderOf(ticketID) == msg.sender || ticketNFT.getApproved(ticketID) == msg.sender, "Ticket lister not approved");
         require(!ticketNFT.isExpiredOrUsed(ticketID), "Ticket is expired or used");
 
         ticketNFT.transferFrom(msg.sender, address(this), ticketID);

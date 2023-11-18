@@ -17,10 +17,10 @@ contract SecondaryMarketTest is Test {
 
     function setUp() public {
         purchaseToken = new PurchaseToken();
-        ticketNFT = new TicketNFT("Concert", seller, 1 ether, 100, primaryMarket);
+        ticketNFT = new TicketNFT("Concert", seller, 20e18, 100, primaryMarket);
         secondaryMarket = new SecondaryMarket(purchaseToken);
-        vm.deal(buyer, 10 ether);
-        vm.deal(seller, 10 ether);
+        vm.deal(buyer, 30e18);
+        vm.deal(seller, 30e18);
 
         // Mint a ticket to the seller (simulate primary market action)
         vm.prank(primaryMarket); // Ensure mint is called by the primary market address
@@ -28,16 +28,14 @@ contract SecondaryMarketTest is Test {
     }
 
     function testListAndBidTicket() public {
-        uint256 ticketId = 1; // Assuming the ticket ID is 1
-
-        // Check ownership before listing
+        uint256 ticketId = 1;
         assertEq(ticketNFT.holderOf(ticketId), seller, "Seller should own the ticket");
-
-        // Seller lists the ticket on the secondary market
+        
         vm.prank(seller);
         ticketNFT.approve(address(secondaryMarket), ticketId);
+        vm.prank(address(secondaryMarket));
         secondaryMarket.listTicket(address(ticketNFT), ticketId, 2 ether);
-
+        
         // Buyer bids on the ticket
         vm.startPrank(buyer);
         purchaseToken.mint{value: 5 ether}();
