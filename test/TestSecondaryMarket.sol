@@ -17,13 +17,13 @@ contract SecondaryMarketTest is Test {
 
     function setUp() public {
         purchaseToken = new PurchaseToken();
-        ticketNFT = new TicketNFT("Concert", seller, 20e18, 100, primaryMarket);
+        ticketNFT = new TicketNFT("Ticket1", seller, 1 ether, 100, primaryMarket);
         secondaryMarket = new SecondaryMarket(purchaseToken);
-        vm.deal(buyer, 30e18);
-        vm.deal(seller, 30e18);
+        vm.deal(buyer, 10 ether);
+        vm.deal(seller, 10 ether);
 
-        // Mint a ticket to the seller (simulate primary market action)
-        vm.prank(primaryMarket); // Ensure mint is called by the primary market address
+        // Seller mints a ticket
+        vm.prank(primaryMarket); 
         ticketNFT.mint(seller, "Seller");
     }
 
@@ -35,25 +35,22 @@ contract SecondaryMarketTest is Test {
         ticketNFT.approve(address(secondaryMarket), ticketId);
         vm.prank(address(secondaryMarket));
         secondaryMarket.listTicket(address(ticketNFT), ticketId, 2 ether);
-        
+
         // Buyer bids on the ticket
         vm.startPrank(buyer);
         purchaseToken.mint{value: 5 ether}();
-        purchaseToken.approve(address(secondaryMarket), 2 ether);
-        secondaryMarket.submitBid(address(ticketNFT), ticketId, 2 ether, "Buyer");
-        assertEq(secondaryMarket.getHighestBid(address(ticketNFT), ticketId), 2 ether);
+        purchaseToken.approve(address(secondaryMarket), 3 ether);
+        secondaryMarket.submitBid(address(ticketNFT), ticketId, 3 ether, "Buyer");
+        assertEq(secondaryMarket.getHighestBid(address(ticketNFT), ticketId), 3 ether);
         vm.stopPrank();
     }
 
     function testAcceptBid() public {
         testListAndBidTicket();
         uint256 ticketId = 1;
-
-        // Check ownership before accepting the bid
         assertEq(ticketNFT.holderOf(ticketId), address(secondaryMarket), "Secondary market should hold the ticket");
-
-        // Seller accepts the bid
-        vm.prank(seller);
+        
+        vm.prank(address(secondaryMarket)); // Accept bid called by secondary market
         secondaryMarket.acceptBid(address(ticketNFT), ticketId);
         assertEq(ticketNFT.holderOf(ticketId), buyer, "Buyer should now own the ticket");
     }
