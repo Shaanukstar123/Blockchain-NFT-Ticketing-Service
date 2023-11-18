@@ -13,7 +13,8 @@ contract TicketNFTTest is Test {
     address testHolder = address(0x456);
 
     function setUp() public {
-        ticketNFT = new TicketNFT(testEventName, testEventCreator, testTicketPrice, testMaxTickets, address(this));
+        //instantiating and making this address the primary market
+        ticketNFT = new TicketNFT(testEventName, testEventCreator, testTicketPrice, testMaxTickets, address(this)); 
     }
 
     function testMintTicket() public {
@@ -44,17 +45,16 @@ contract TicketNFTTest is Test {
     }
 
     function testInvalidMinting() public {
-        for (uint i = 0; i < testMaxTickets; i++) {
+        for (uint i = 1; i < testMaxTickets+1; i++) {
             ticketNFT.mint(testHolder, "Holder");
         }
-
-        vm.expectRevert(); // Expect a revert on the next call
+        vm.expectRevert(); 
         ticketNFT.mint(testHolder, "Holder");
     }
 
     function testTicketHolderNameUpdate() public {
         uint256 ticketId = ticketNFT.mint(testHolder, "Initial Holder");
-        vm.prank(testHolder); // Simulating action by the ticket holder
+        vm.prank(testHolder); 
         ticketNFT.updateHolderName(ticketId, "Updated Holder");
 
         assertEq(ticketNFT.holderNameOf(ticketId), "Updated Holder", "Holder's name should be updated");
@@ -62,26 +62,26 @@ contract TicketNFTTest is Test {
 
     function testTicketExpiryAfter10Days() public {
         uint256 ticketId = ticketNFT.mint(testHolder, "Holder");
-        vm.warp(block.timestamp + 10 days + 1); // Simulate time passage
+        vm.warp(block.timestamp + 10 days + 1); 
 
         assertEq(ticketNFT.isExpiredOrUsed(ticketId), true, "Ticket should be expired after 10 days");
     }
 
     function testUsedTicketFlag() public {
         uint256 ticketId = ticketNFT.mint(testHolder, "Holder");
-        vm.prank(address(this)); // Assuming this contract is the admin
+        vm.prank(address(this)); // assuming this contract is the admin
         ticketNFT.setUsed(ticketId);
 
         vm.prank(testHolder);
-        vm.expectRevert(); // Expect a revert on the next call
+        vm.expectRevert(); 
         ticketNFT.transferFrom(testHolder, address(0x789), ticketId);
     }
 
     function testAdminOnlyAccess() public {
         uint256 ticketId = ticketNFT.mint(testHolder, "Holder");
         vm.prank(testHolder);
-        vm.expectRevert(); // Expect a revert on the next call
-        ticketNFT.setUsed(ticketId); // This should fail as only admin can set this
+        vm.expectRevert();
+        ticketNFT.setUsed(ticketId); // should fail as only primary market can do this
     }
 
     function testTicketMetadataRetrieval() public {

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.10;
 
 import "../interfaces/ITicketNFT.sol";
+import "forge-std/Test.sol";
 
 contract TicketNFT is ITicketNFT {
 
@@ -47,7 +48,7 @@ contract TicketNFT is ITicketNFT {
     function mint(address _holder, string memory _holderName) external override returns (uint256 id) {
         ticketID++;
         require(msg.sender == primaryMarketAddress, "TicketNFT: caller is not the primary market"); // Replace with actual primary market address
-
+        require(ticketID < maxTickets+1, "TicketNFT: max ticket limit reached"); //TicketID indexing starts from 1
         tickets[ticketID] = Ticket({
             eventName: nameOfEvent,
             holder: _holder,
@@ -79,7 +80,7 @@ contract TicketNFT is ITicketNFT {
     function transferFrom(address _from, address _to, uint256 _ticketID) external override {
         require(_from != address(0), "TicketNFT: transfer from the zero address");
         require(_to != address(0), "TicketNFT: transfer to the zero address");
-        
+        require(!tickets[_ticketID].used, "TicketNFT: ticket is already used");
         require(tickets[_ticketID].holder == _from || ticketApprovals[_ticketID] == msg.sender, "TicketNFT: caller is not authorized to transfer");
 
         tickets[_ticketID].holder = _to;
@@ -113,10 +114,10 @@ contract TicketNFT is ITicketNFT {
     }
 
     function setUsed(uint256 _ticketID) external {
-        require(tickets[_ticketID].holder == msg.sender, "TicketNFT: caller is not the ticket owner");
+        require(msg.sender == primaryMarketAddress, "TicketNFT: caller is not the primary market admin");
         require(tickets[_ticketID].holder != address(0), "TicketNFT: ticket does not exist");
-        // require(tickets[_ticketID].expiryTime < block.timestamp, "TicketNFT: ticket has not expired yet"); //Removed to fix Ticket not expired yet error
-        require(tickets[_ticketID].used == false, "TicketNFT: ticket has already been used");
+        require(block.timestamp <= tickets[_ticketID].expiryTime, "TicketNFT: ticket has expired");
+        require(!tickets[_ticketID].used, "TicketNFT: ticket has already been used");
         tickets[_ticketID].used = true;
     }
 
