@@ -7,6 +7,8 @@ import {IERC20} from "../interfaces/IERC20.sol";
 import {IPrimaryMarket} from "../interfaces/IPrimaryMarket.sol";
 import {PurchaseToken} from "./PurchaseToken.sol";
 
+import "forge-std/Test.sol"; //for print statements
+
 contract PrimaryMarket is IPrimaryMarket {
     IERC20 public paymentToken;
     
@@ -41,17 +43,11 @@ contract PrimaryMarket is IPrimaryMarket {
 
     function purchase(address ticketCollection, string memory holderName) external override returns (uint256 id) {
         EventDetails storage details = eventDetails[ticketCollection];
-        
-        // Check if the event exists and tickets are available
-        require(details.eventCreator != address(0) && details.maxTickets > details.ticketsSold, "PrimaryMarket: Invalid event or no tickets available");
-
-        // Check for sufficient funds and allowance
+        require(details.eventCreator != address(0), "PrimaryMarket: Invalid event");
+        require(details.maxTickets > details.ticketsSold, "PrimaryMarket: No tickets available");
         require(paymentToken.balanceOf(msg.sender) >= details.price && paymentToken.allowance(msg.sender, address(this)) >= details.price, "PrimaryMarket: Insufficient funds or allowance");
-
-        // Transfer payment from buyer to event creator
         paymentToken.transferFrom(msg.sender, details.eventCreator, details.price);
-
-        // Mint the ticket and update tickets sold
+        //Mint the ticket and update tickets sold
         uint256 ticketId = TicketNFT(ticketCollection).mint(msg.sender, holderName);
         details.ticketsSold++;
 

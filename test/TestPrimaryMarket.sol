@@ -37,22 +37,64 @@ contract PrimaryMarketTest is Test {
     }
 
     function testInvalidEventCreation() public {
-    // Attempt creating an event with invalid parameters
+        string memory eventName = "Invalid Event";
+        uint256 invalidPrice = 0; 
+        uint256 invalidMaxTickets = 0;
+
+        vm.expectRevert(); // Not sure about this test yet
+        primaryMarket.createNewEvent(eventName, invalidPrice, invalidMaxTickets);
     }
 
     function testEventCreationWithDifferentParameters() public {
-        // Create multiple events with varied parameters
-    }
+        string memory eventName1 = "Event One";
+        string memory eventName2 = "Event Two";
+        uint256 price1 = 1 ether;
+        uint256 price2 = 0.5 ether;
+        uint256 maxTickets1 = 50;
+        uint256 maxTickets2 = 150;
+
+        ITicketNFT ticketNFT1 = primaryMarket.createNewEvent(eventName1, price1, maxTickets1);
+        ITicketNFT ticketNFT2 = primaryMarket.createNewEvent(eventName2, price2, maxTickets2);
+
+        assertEq(ticketNFT1.maxNumberOfTickets(), maxTickets1, "Max tickets for event 1 should match");
+        assertEq(ticketNFT2.maxNumberOfTickets(), maxTickets2, "Max tickets for event 2 should match");
+}
 
     function testPurchaseWithInsufficientTokens() public {
-        // Attempt purchasing a ticket without enough ERC20 tokens
+        ITicketNFT ticketNFT = primaryMarket.createNewEvent("TestEvent", 1 ether, 100);
+        vm.startPrank(testBuyer);
+        purchaseToken.mint{value: 0.005 ether}(); //Divided amount by 100 due to purchasetoken minting *100 value input = 50 eth
+        purchaseToken.approve(address(primaryMarket), 1 ether);
+        vm.expectRevert();
+        primaryMarket.purchase(address(ticketNFT), "Buyer");
+        vm.stopPrank();
     }
 
     function testMaxTicketLimitEnforcement() public {
-        // Try purchasing more tickets than allowed for an event
+        ITicketNFT ticketNFT = primaryMarket.createNewEvent("Event1", 1 ether, 1); // Only 1 ticket available
+        vm.startPrank(testBuyer);
+        purchaseToken.mint{value: 2 ether}();
+        purchaseToken.approve(address(primaryMarket), 2 ether);
+        //should succeed
+        primaryMarket.purchase(address(ticketNFT), "Buyer");
+        //should fail
+        vm.expectRevert();
+        primaryMarket.purchase(address(ticketNFT), "Buyer");
+        vm.stopPrank();
     }
 
     function testEventCreatorEarnings() public {
-        // Verify event creator receives correct ERC20 tokens after a sale
+        address eventCreator = address(this); // Assuming this contract is the event creator
+        ITicketNFT ticketNFT = primaryMarket.createNewEvent("Test1", 1 ether, 100);
+        uint256 initialBalance = purchaseToken.balanceOf(eventCreator);
+
+        vm.startPrank(testBuyer);
+        purchaseToken.mint{value: 1 ether}();
+        purchaseToken.approve(address(primaryMarket), 1 ether);
+        primaryMarket.purchase(address(ticketNFT), "Buyer");
+        vm.stopPrank();
+
+        uint256 newBalance = purchaseToken.balanceOf(eventCreator);
+        assertEq(newBalance, initialBalance + 1 ether, "Event creator's earnings should increase by ticket price");
     }
 }
