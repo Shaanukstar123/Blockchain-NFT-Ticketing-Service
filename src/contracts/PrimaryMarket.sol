@@ -58,7 +58,7 @@ contract PrimaryMarket is IPrimaryMarket {
 
     function getPrice(address ticketCollection) external view override returns (uint256 price) {
         EventDetails memory details = eventDetails[ticketCollection];
-        // Check if the event exists (creator is not the zero address)
+        //Check if the event exists (creator is not the zero address)
         require(details.eventCreator != address(0), "PrimaryMarket: Event does not exist");
         return details.price;
     }

@@ -84,7 +84,7 @@ contract SecondaryMarket is ISecondaryMarket {
         require(listing.isActive, "Ticket not listed");
         require(listing.lister == msg.sender, "Not ticket lister");
         require(listing.highestBidder != address(0), "No bids available");
-        //check balance directly because secondary market has the tokes.
+        //check balance directly because secondary market has the tokens.
         require(purchaseToken.balanceOf(address(this)) >= listing.highestBid, "Accept Bid: Insufficient balance");
         ITicketNFT ticketNFT = ITicketNFT(ticketCollection);
         address eventCreator = ticketNFT.creator();
