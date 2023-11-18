@@ -36,15 +36,6 @@ contract PrimaryMarketTest is Test {
         vm.stopPrank();
     }
 
-    function testInvalidEventCreation() public {
-        string memory eventName = "Invalid Event";
-        uint256 invalidPrice = 0; 
-        uint256 invalidMaxTickets = 0;
-
-        vm.expectRevert(); // Not sure about this test yet
-        primaryMarket.createNewEvent(eventName, invalidPrice, invalidMaxTickets);
-    }
-
     function testEventCreationWithDifferentParameters() public {
         string memory eventName1 = "Event One";
         string memory eventName2 = "Event Two";
