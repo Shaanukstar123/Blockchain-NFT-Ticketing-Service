@@ -15,7 +15,7 @@ contract SecondaryMarketTest is Test {
     address buyer = address(0x456);
     address anotherBuyer = address(0x789);
     address eventCreator = address(0x987);
-    address primaryMarket = address(this); // Assuming the test contract simulates the primary market
+    address primaryMarket = address(this); //setting current address as primary market for testing
 
     function setUp() public {
         purchaseToken = new PurchaseToken();

@@ -14,7 +14,7 @@ contract TicketNFT is ITicketNFT {
     }
 
     uint256 private ticketID;
-    address internal primaryMarketAddress;
+    address internal primaryMarketAddress; //Primary Market Admin (Creator)
     string private nameOfEvent;
     uint256 private ticketPrice;
     uint256 private maxTickets;
@@ -45,8 +45,8 @@ contract TicketNFT is ITicketNFT {
 
     function mint(address _holder, string memory _holderName) external override returns (uint256 id) {
         ticketID++;
-        require(msg.sender == primaryMarketAddress, "TicketNFT: caller is not the primary market"); // Replace with actual primary market address
-        require(ticketID < maxTickets+1, "TicketNFT: max ticket limit reached"); //TicketID indexing starts from 1
+        require(msg.sender == primaryMarketAddress, "TicketNFT: caller is not the primary market");
+        require(ticketID < maxTickets+1, "TicketNFT: max ticket limit reached"); //maxTickets+1 because ticketID indexing starts from 1
         tickets[ticketID] = Ticket({
             eventName: nameOfEvent,
             holder: _holder,
@@ -112,7 +112,7 @@ contract TicketNFT is ITicketNFT {
     }
 
     function setUsed(uint256 _ticketID) external {
-        require(msg.sender == primaryMarketAddress, "TicketNFT: caller is not the primary market admin");
+        require(msg.sender == this.creator(), "TicketNFT: caller is not the primary market admin");
         require(tickets[_ticketID].holder != address(0), "TicketNFT: ticket does not exist");
         require(block.timestamp <= tickets[_ticketID].expiryTime, "TicketNFT: ticket has expired");
         require(!tickets[_ticketID].used, "TicketNFT: ticket has already been used");

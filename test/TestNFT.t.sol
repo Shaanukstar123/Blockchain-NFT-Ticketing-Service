@@ -13,7 +13,7 @@ contract TicketNFTTest is Test {
     address testHolder = address(0x456);
 
     function setUp() public {
-        //instantiating and making this address the primary market
+        //pretending this address is the primary market
         ticketNFT = new TicketNFT(testEventName, testEventCreator, testTicketPrice, testMaxTickets, address(this)); 
     }
 
@@ -69,7 +69,7 @@ contract TicketNFTTest is Test {
 
     function testUsedTicketFlag() public {
         uint256 ticketId = ticketNFT.mint(testHolder, "Holder");
-        vm.prank(address(this)); // assuming this contract is the admin
+        vm.prank(testEventCreator);
         ticketNFT.setUsed(ticketId);
 
         vm.prank(testHolder);
