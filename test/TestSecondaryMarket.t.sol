@@ -24,7 +24,7 @@ contract SecondaryMarketTest is Test {
         vm.deal(buyer, 10 ether);
         vm.deal(seller, 10 ether);
 
-        // Seller mints a ticket
+        //seller mints a ticket
         vm.prank(primaryMarket);
         ticketNFT.mint(seller, "Seller");
     }
@@ -38,7 +38,7 @@ contract SecondaryMarketTest is Test {
         vm.prank(seller);
         secondaryMarket.listTicket(address(ticketNFT), ticketId, 2 ether);
 
-        // Buyer bids on the ticket
+        //buyer bids on the ticket
         vm.startPrank(buyer);
         purchaseToken.mint{value: 0.05 ether}(); //0.05 * 100 (after minting) = 5 eth
         purchaseToken.approve(address(secondaryMarket), 3 ether);
@@ -66,10 +66,10 @@ contract SecondaryMarketTest is Test {
     }
 
     function testBidOnListedTicket() public {
-        testListAndBidTicket(); // List a ticket first
+        testListAndBidTicket();
         uint256 ticketId = 1;
 
-        vm.startPrank(anotherBuyer); // Another buyer different from the initial buyer
+        vm.startPrank(anotherBuyer);
         vm.deal(anotherBuyer, 1 ether);
         purchaseToken.mint{value: 0.02 ether}();
         purchaseToken.approve(address(secondaryMarket), 1 ether);
@@ -77,7 +77,7 @@ contract SecondaryMarketTest is Test {
         secondaryMarket.submitBid(address(ticketNFT), ticketId, 1 ether, "AnotherBuyer");
         vm.stopPrank();
 
-        // The highest bid should remain unchanged
+        //highest bid should remain unchanged
         uint256 highestBid = secondaryMarket.getHighestBid(address(ticketNFT), ticketId);
         assertEq(highestBid, 3 ether, "The highest bid should still be 3 ether");
     }

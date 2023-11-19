@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
 import {ITicketNFT} from "../interfaces/ITicketNFT.sol";
@@ -94,9 +94,7 @@ contract SecondaryMarket is ISecondaryMarket {
 
         uint256 fee = listing.highestBid * feePercentage / 100;
         require(purchaseToken.balanceOf(listing.lister) >= listing.highestBid, "SecondaryMarket: Contract balance insufficient");
-
         require(purchaseToken.transfer(listing.originalLister, listing.highestBid - fee), "SecondaryMarket: Transfer to lister failed");
-
         //transfer fee to event creator
         require(purchaseToken.transfer(eventCreator, fee), "SecondaryMarket: Fee transfer failed");
 

@@ -75,7 +75,7 @@ contract PrimaryMarketTest is Test {
     }
 
     function testEventCreatorEarnings() public {
-        address eventCreator = address(this); // Assuming this contract is the event creator
+        address eventCreator = address(this);
         ITicketNFT ticketNFT = primaryMarket.createNewEvent("Test1", 1 ether, 100);
         uint256 initialBalance = purchaseToken.balanceOf(eventCreator);
 
