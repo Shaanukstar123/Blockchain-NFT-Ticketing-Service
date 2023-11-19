@@ -22,10 +22,10 @@ contract SecondaryMarket is ISecondaryMarket {
         bool isActive;
     }
 
-    // Mapping from ticket collection address and ticket ID to its listing
+    //mapping from ticket collection address and ticket ID to its listing
     mapping(address => mapping(uint256 => TicketListing)) public listings;
 
-    // Mapping from ticket collection address and ticket ID to bid amounts
+    //mapping from ticket collection address and ticket ID to bid amounts
     mapping(address => mapping(uint256 => uint256)) public bids;
 
     constructor(PurchaseToken _purchaseToken) {
@@ -114,7 +114,7 @@ contract SecondaryMarket is ISecondaryMarket {
         require(listing.originalLister == msg.sender || isExpired, "SecondaryMarket: Not ticket lister or ticket not expired");
 
         if (listing.highestBidder != address(0) && listing.highestBid > 0) {
-            // Refund the highest bid if there is one
+            //Refund the highest bid if there is one
             require(purchaseToken.transfer(listing.highestBidder, listing.highestBid), "SecondaryMarket: Refund failed");
         }
 

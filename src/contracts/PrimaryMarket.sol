@@ -7,8 +7,6 @@ import {IERC20} from "../interfaces/IERC20.sol";
 import {IPrimaryMarket} from "../interfaces/IPrimaryMarket.sol";
 import {PurchaseToken} from "./PurchaseToken.sol";
 
-import "forge-std/Test.sol"; //for print statements
-
 contract PrimaryMarket is IPrimaryMarket {
     IERC20 public paymentToken;
     
@@ -26,8 +24,6 @@ contract PrimaryMarket is IPrimaryMarket {
     }
 
     function createNewEvent(string memory eventName, uint256 price, uint256 maxNumberOfTickets) external override returns (ITicketNFT ticketCollection) {
-        // Logic to create a new TicketNFT contract and store event details
-        // Emit EventCreated event
         TicketNFT newTicketNFT = new TicketNFT(eventName, msg.sender, price, maxNumberOfTickets, address(this));
 
         eventDetails[address(newTicketNFT)] = EventDetails({
@@ -58,7 +54,6 @@ contract PrimaryMarket is IPrimaryMarket {
 
     function getPrice(address ticketCollection) external view override returns (uint256 price) {
         EventDetails memory details = eventDetails[ticketCollection];
-        //Check if the event exists (creator is not the zero address)
         require(details.eventCreator != address(0), "PrimaryMarket: Event does not exist");
         return details.price;
     }

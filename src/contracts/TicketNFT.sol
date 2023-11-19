@@ -31,7 +31,6 @@ contract TicketNFT is ITicketNFT {
         primaryMarketAddress = _primaryMarketAddress;
     }
 
-    // Implementations of ITicketNFT functions
     function creator() external view override returns (address) {
         return eventCreator;
     }
