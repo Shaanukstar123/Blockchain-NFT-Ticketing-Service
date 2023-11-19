@@ -29,7 +29,7 @@ contract PrimaryMarketTest is Test {
     function testPurchaseTicket() public {
         ITicketNFT ticketNFT = primaryMarket.createNewEvent("Concert", 1 ether, 100);
         vm.startPrank(testBuyer);
-        purchaseToken.mint{value: 5 ether}();
+        purchaseToken.mint{value: 0.05 ether}();
         purchaseToken.approve(address(primaryMarket), 1 ether);
         uint256 ticketId = primaryMarket.purchase(address(ticketNFT), "Buyer");
         assertEq(ticketNFT.holderOf(ticketId), testBuyer, "Buyer should own the ticket");
@@ -64,7 +64,7 @@ contract PrimaryMarketTest is Test {
     function testMaxTicketLimitEnforcement() public {
         ITicketNFT ticketNFT = primaryMarket.createNewEvent("Event1", 1 ether, 1); // Only 1 ticket available
         vm.startPrank(testBuyer);
-        purchaseToken.mint{value: 2 ether}();
+        purchaseToken.mint{value: 0.02 ether}();
         purchaseToken.approve(address(primaryMarket), 2 ether);
         //should succeed
         primaryMarket.purchase(address(ticketNFT), "Buyer");
@@ -80,7 +80,7 @@ contract PrimaryMarketTest is Test {
         uint256 initialBalance = purchaseToken.balanceOf(eventCreator);
 
         vm.startPrank(testBuyer);
-        purchaseToken.mint{value: 1 ether}();
+        purchaseToken.mint{value: 0.01 ether}();
         purchaseToken.approve(address(primaryMarket), 1 ether);
         primaryMarket.purchase(address(ticketNFT), "Buyer");
         vm.stopPrank();

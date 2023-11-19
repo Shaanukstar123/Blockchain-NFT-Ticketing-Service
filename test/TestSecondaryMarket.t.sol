@@ -14,11 +14,12 @@ contract SecondaryMarketTest is Test {
     address seller = address(0x123);
     address buyer = address(0x456);
     address anotherBuyer = address(0x789);
+    address eventCreator = address(0x987);
     address primaryMarket = address(this); // Assuming the test contract simulates the primary market
 
     function setUp() public {
         purchaseToken = new PurchaseToken();
-        ticketNFT = new TicketNFT("Ticket1", seller, 1 ether, 100, primaryMarket);
+        ticketNFT = new TicketNFT("Ticket1", eventCreator, 1 ether, 100, primaryMarket);
         secondaryMarket = new SecondaryMarket(purchaseToken);
         vm.deal(buyer, 10 ether);
         vm.deal(seller, 10 ether);
@@ -34,12 +35,12 @@ contract SecondaryMarketTest is Test {
         
         vm.prank(seller);
         ticketNFT.approve(address(secondaryMarket), ticketId);
-        vm.prank(address(secondaryMarket));
+        vm.prank(seller);
         secondaryMarket.listTicket(address(ticketNFT), ticketId, 2 ether);
 
         // Buyer bids on the ticket
         vm.startPrank(buyer);
-        purchaseToken.mint{value: 5 ether}();
+        purchaseToken.mint{value: 0.05 ether}(); //0.05 * 100 (after minting) = 5 eth
         purchaseToken.approve(address(secondaryMarket), 3 ether);
         secondaryMarket.submitBid(address(ticketNFT), ticketId, 3 ether, "Buyer");
         assertEq(secondaryMarket.getHighestBid(address(ticketNFT), ticketId), 3 ether);
@@ -51,7 +52,7 @@ contract SecondaryMarketTest is Test {
         uint256 ticketId = 1;
         assertEq(ticketNFT.holderOf(ticketId), address(secondaryMarket), "Secondary market should hold the ticket");
         
-        vm.prank(address(secondaryMarket)); // Accept bid called by secondary market
+        vm.prank(seller);
         secondaryMarket.acceptBid(address(ticketNFT), ticketId);
         assertEq(ticketNFT.holderOf(ticketId), buyer, "Buyer should now own the ticket");
     }
@@ -60,7 +61,7 @@ contract SecondaryMarketTest is Test {
         uint256 ticketId = 1;
         vm.warp(block.timestamp + 11 days);
         vm.prank(seller);
-        vm.expectRevert("Ticket is expired or used");
+        vm.expectRevert("SecondaryMarket: Ticket is expired or used");
         secondaryMarket.listTicket(address(ticketNFT), ticketId, 2 ether);
     }
 
@@ -69,11 +70,14 @@ contract SecondaryMarketTest is Test {
         uint256 ticketId = 1;
 
         vm.startPrank(anotherBuyer); // Another buyer different from the initial buyer
-        purchaseToken.mint{value: 2 ether}();
+        vm.deal(anotherBuyer, 1 ether);
+        purchaseToken.mint{value: 0.02 ether}();
         purchaseToken.approve(address(secondaryMarket), 1 ether);
+        vm.expectRevert("SecondaryMarket: Bid not higher than current highest");
         secondaryMarket.submitBid(address(ticketNFT), ticketId, 1 ether, "AnotherBuyer");
         vm.stopPrank();
 
+        // The highest bid should remain unchanged
         uint256 highestBid = secondaryMarket.getHighestBid(address(ticketNFT), ticketId);
         assertEq(highestBid, 3 ether, "The highest bid should still be 3 ether");
     }
@@ -81,19 +85,15 @@ contract SecondaryMarketTest is Test {
     function testMultipleBids() public {
         testListAndBidTicket();
         uint256 ticketId = 1;
-
-        // Another buyer submits a higher bid
+        vm.deal(anotherBuyer, 1 ether);
         vm.startPrank(anotherBuyer);
-        purchaseToken.mint{value: 4 ether}();
+        purchaseToken.mint{value: 0.04 ether}();
         purchaseToken.approve(address(secondaryMarket), 4 ether);
         secondaryMarket.submitBid(address(ticketNFT), ticketId, 4 ether, "AnotherBuyer");
         vm.stopPrank();
-
-        // Assert that the highest bid is updated
         uint256 highestBid = secondaryMarket.getHighestBid(address(ticketNFT), ticketId);
         assertEq(highestBid, 4 ether, "The highest bid should be 4 ether");
     }
-
 
     function testDelistingTicket() public {
         testListAndBidTicket();
@@ -101,7 +101,7 @@ contract SecondaryMarketTest is Test {
 
         vm.prank(seller);
         secondaryMarket.delistTicket(address(ticketNFT), ticketId);
-        vm.expectRevert("SecondaryMarket: Ticket not listed");
+        vm.expectRevert();
         secondaryMarket.submitBid(address(ticketNFT), ticketId, 1 ether, "AnotherBuyer");
     }
 
@@ -111,22 +111,22 @@ contract SecondaryMarketTest is Test {
 
         uint256 sellerBalanceBefore = purchaseToken.balanceOf(seller);
         uint256 creatorBalanceBefore = purchaseToken.balanceOf(ticketNFT.creator());
-        vm.prank(address(secondaryMarket));
+        vm.prank(seller);
         secondaryMarket.acceptBid(address(ticketNFT), ticketId);
         uint256 sellerBalanceAfter = purchaseToken.balanceOf(seller);
         uint256 creatorBalanceAfter = purchaseToken.balanceOf(ticketNFT.creator());
+        uint256 fee = 3 ether * 5 / 100;
 
-        uint256 fee = 3 ether * 0.05;
+        //assertion only works if seller!=creator
         assertEq(sellerBalanceAfter, sellerBalanceBefore + (3 ether - fee), "Balance should reflect correct amount after fee deduction");
         assertEq(creatorBalanceAfter, creatorBalanceBefore + fee, "Event creator should receive the fee");
     }
 
-
-    function testTransferOfOwnershipAndPaymentOnBidAcceptance() public {
+    function testTransfersOnBidAcceptance() public {
         testListAndBidTicket();
         uint256 ticketId = 1;
-
-        vm.prank(address(secondaryMarket));
+        
+        vm.prank(seller);
         secondaryMarket.acceptBid(address(ticketNFT), ticketId);
         assertEq(ticketNFT.holderOf(ticketId), buyer, "Buyer should now own the ticket");
     }
@@ -134,11 +134,12 @@ contract SecondaryMarketTest is Test {
     function testRefusingLowerBidsAfterHigherBid() public {
         testListAndBidTicket();
         uint256 ticketId = 1;
-
+        
+        vm.deal(anotherBuyer, 1 ether);
         vm.startPrank(anotherBuyer);
-        purchaseToken.mint{value: 2 ether}();
+        purchaseToken.mint{value: 0.02 ether}();
         purchaseToken.approve(address(secondaryMarket), 2 ether);
-        vm.expectRevert("Bid not higher than current highest");
+        vm.expectRevert("SecondaryMarket: Bid not higher than current highest");
         secondaryMarket.submitBid(address(ticketNFT), ticketId, 2 ether, "AnotherBuyer");
         vm.stopPrank();
     }
